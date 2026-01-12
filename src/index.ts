@@ -27,14 +27,14 @@ const server = new McpServer({
 
 server.tool(
   "authenticate",
-  "Authenticate with Reactive Resume using email and password. Must be called before other operations.",
+  "Authenticate with Reactive Resume using username/email and password. Must be called before other operations.",
   {
-    email: z.string().email().describe("User email address"),
+    identifier: z.string().describe("Username or email address"),
     password: z.string().describe("User password"),
   },
-  async ({ email, password }) => {
+  async ({ identifier, password }) => {
     try {
-      const result = await apiClient.login(email, password);
+      const result = await apiClient.login(identifier, password);
       return {
         content: [
           {
