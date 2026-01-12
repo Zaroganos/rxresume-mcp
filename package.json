@@ -1,0 +1,33 @@
+{
+  "name": "rxresume-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Reactive Resume - enables natural language manipulation of resume content",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "rxresume-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test:api": "tsx src/test-api.ts"
+  },
+  "keywords": [
+    "mcp",
+    "reactive-resume",
+    "resume",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
