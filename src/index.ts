@@ -16,8 +16,17 @@ const BASE_URL = process.env.RXRESUME_BASE_URL || "https://resume.zimerguz.net";
 
 let apiClient: RxResumeApiClient = createApiClient(BASE_URL);
 
+// Generate cuid2-compatible IDs (lowercase alphanumeric, ~24 chars)
 function generateId(): string {
-  return crypto.randomUUID();
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const length = 24;
+  let result = "";
+  const randomValues = new Uint8Array(length);
+  crypto.getRandomValues(randomValues);
+  for (let i = 0; i < length; i++) {
+    result += chars[randomValues[i] % chars.length];
+  }
+  return result;
 }
 
 const server = new McpServer({
@@ -370,19 +379,13 @@ server.tool(
     resume_id: z.string().describe("The resume ID"),
     content: z.string().describe("The summary content (supports HTML/Markdown)"),
   },
-  async ({ resume_id, content }) => {
+  async ({ resume_id, content: summaryContent }) => {
     try {
       const resume = await apiClient.getResume(resume_id);
       const summarySection = resume.data.sections.summary;
       const updatedSection = {
         ...summarySection,
-        items: [
-          {
-            id: summarySection.items[0]?.id || generateId(),
-            visible: true,
-            content,
-          },
-        ],
+        content: summaryContent,
       };
       await apiClient.updateSection(resume_id, "summary", updatedSection);
       return {

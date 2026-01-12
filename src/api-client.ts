@@ -215,7 +215,14 @@ export class RxResumeApiClient {
     id: string,
     data: Partial<ResumeData>
   ): Promise<Resume> {
-    return this.updateResume(id, { data });
+    const resume = await this.getResume(id);
+    const mergedData = {
+      ...resume.data,
+      ...data,
+      basics: data.basics ? { ...resume.data.basics, ...data.basics } : resume.data.basics,
+      sections: data.sections ? { ...resume.data.sections, ...data.sections } : resume.data.sections,
+    };
+    return this.updateResume(id, { data: mergedData });
   }
 
   async updateSection<T>(
