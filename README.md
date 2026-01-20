@@ -14,13 +14,14 @@ An MCP (Model Context Protocol) server that enables natural language manipulatio
 ## Prerequisites
 
 - Node.js 18+
-- A running Reactive Resume instance (self-hosted or cloud)
+- A running Reactive Resume instance (self-hosted or [rxresu.me](https://rxresu.me))
 - User account on the Reactive Resume instance
 
 ## Installation
 
 ```bash
 # Clone the repository
+git clone https://github.com/Zaroganos/rxresume-mcp.git
 cd rxresume-mcp
 
 # Install dependencies
@@ -32,65 +33,125 @@ npm run build
 
 ## Configuration
 
+### Environment Variables
+
 Create a `.env` file based on `.env.example`:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` with your values:
 
 ```env
 # Base URL of your Reactive Resume instance
-RXRESUME_BASE_URL=https://resume.zimerguz.net
+# Examples:
+#   - Self-hosted: https://resume.yourdomain.com
+#   - Cloud: https://rxresu.me
+RXRESUME_BASE_URL=https://your-instance-url.com
 
-# Optional: Pre-configure credentials
+# Optional: Pre-configure credentials for automatic authentication
 RXRESUME_EMAIL=your@email.com
 RXRESUME_PASSWORD=yourpassword
 ```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `RXRESUME_BASE_URL` | Yes | The URL of your Reactive Resume instance |
+| `RXRESUME_EMAIL` | No | Email for automatic authentication |
+| `RXRESUME_PASSWORD` | No | Password for automatic authentication |
 
 ## Testing
 
 Test API connectivity:
 
 ```bash
-# Without auth
+# Without auth (health check only)
 npm run test:api
 
-# With auth
+# With auth (full test)
 RXRESUME_EMAIL=your@email.com RXRESUME_PASSWORD=yourpassword npm run test:api
 ```
 
-## Usage with Claude Desktop
+## Usage with MCP Clients
 
-Add to your Claude Desktop configuration (`claude_desktop_config.json`):
+> **NB**: Replace `/path/to/rxresume-mcp` with the actual absolute path to your cloned repository.
+> **NB**: After saving the config file, refresh or restart that application for it to read the updated config.
+
+### Claude Desktop
+
+Add to your Claude Desktop configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "rxresume": {
       "command": "node",
-      "args": ["C:/Users/Iliya/Documents/GitHub/rxresume-mcp/dist/index.js"],
+      "args": ["/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://resume.zimerguz.net"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com"
       }
     }
   }
 }
 ```
 
-## Usage with Windsurf/Cascade
+### Cursor
 
-Add to your MCP settings:
+Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally):
 
 ```json
 {
   "mcpServers": {
     "rxresume": {
       "command": "node",
-      "args": ["C:/Users/Iliya/Documents/GitHub/rxresume-mcp/dist/index.js"],
+      "args": ["${userHome}/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://resume.zimerguz.net"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Add to your Windsurf MCP configuration file:
+
+- **macOS/Linux**: `~/.codeium/windsurf/mcp_config.json`
+- **Windows**: `%USERPROFILE%\.codeium\windsurf\mcp_config.json`
+
+You can also access this file via Windsurf: *Settings → Cascade → MCP Servers → View Raw Config*
+
+```json
+{
+  "mcpServers": {
+    "rxresume": {
+      "command": "node",
+      "args": ["/path/to/rxresume-mcp/dist/index.js"],
+      "env": {
+        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+      }
+    }
+  }
+}
+```
+
+### Other MCP Clients
+
+For other MCP-compatible clients, consult your client's documentation for the config file location. The general format is the same:
+
+```json
+{
+  "mcpServers": {
+    "rxresume": {
+      "command": "node",
+      "args": ["/path/to/rxresume-mcp/dist/index.js"],
+      "env": {
+        "RXRESUME_BASE_URL": "https://your-instance-url.com"
       }
     }
   }
@@ -185,6 +246,12 @@ src/
 - Credentials are only stored in memory during the session
 - Tokens are transmitted via HTTP headers (ensure HTTPS in production)
 - The MCP server does not persist any sensitive data
+
+## Related Resources
+
+- [Reactive Resume](https://rxresu.me/) - The resume builder this MCP server integrates with
+- [Reactive Resume Self-Hosting Guide](https://docs.rxresu.me/product-guides/self-hosting-reactive-resume-using-docker) - Instructions for self-hosting
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification and documentation
 
 ## License
 

@@ -12,7 +12,7 @@ import type {
   SectionName,
 } from "./types.js";
 
-const BASE_URL = process.env.RXRESUME_BASE_URL || "https://resume.zimerguz.net";
+const BASE_URL = process.env.RXRESUME_BASE_URL || "https://rxresu.me";
 
 let apiClient: RxResumeApiClient = createApiClient(BASE_URL);
 

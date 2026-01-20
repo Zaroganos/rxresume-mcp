@@ -1,6 +1,6 @@
 import { createApiClient } from "./api-client.js";
 
-const BASE_URL = process.env.RXRESUME_BASE_URL || "https://resume.zimerguz.net";
+const BASE_URL = process.env.RXRESUME_BASE_URL || "https://rxresu.me";
 
 async function main() {
   const client = createApiClient(BASE_URL);
