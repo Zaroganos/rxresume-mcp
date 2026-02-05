@@ -1,8 +1,8 @@
 # Reactive Resume MCP Server
 
-An MCP (Model Context Protocol) server that enables natural language manipulation of resumes in [Reactive Resume](https://rxresu.me/).
+An Model Context Protocol server that enables natural language manipulation of resumes in [Reactive Resume](https://rxresu.me/).
 
-**Compatible with Reactive Resume v5** - Uses OpenAPI endpoints with API key authentication.
+**[NEW] Compatible with Reactive Resume v5** - Uses OpenAPI endpoints with API key authentication.
 
 ## Features
 
@@ -16,7 +16,7 @@ An MCP (Model Context Protocol) server that enables natural language manipulatio
 ## Prerequisites
 
 - Node.js 18+
-- A running Reactive Resume instance (self-hosted or [rxresu.me](https://rxresu.me))
+- A running Reactive Resume instance (self-hosted, hosted, or directly from [rxresu.me](https://rxresu.me))
 - User account on the Reactive Resume instance
 
 ## Installation
@@ -45,18 +45,26 @@ cp .env.example .env
 
 Edit `.env` with your values:
 
+Base URL of your Reactive Resume instance
+Examples:
+
+- Self-hosted: https://resume.yourdomain.com
+- Cloud: https://rxresu.me
+
 ```env
-# Base URL of your Reactive Resume instance
-# Examples:
-#   - Self-hosted: https://resume.yourdomain.com
-#   - Cloud: https://rxresu.me
 RXRESUME_BASE_URL=https://your-instance-url.com
+```
 
-# API Key Authentication (RECOMMENDED for v5)
-# Create an API key in Settings > API Keys in your Reactive Resume dashboard
+API Key Authentication (RECOMMENDED for v5)
+Create an API key in Settings > API Keys in your Reactive Resume dashboard
+
+```env
 RXRESUME_API_KEY=your-api-key-here
+```
 
-# Legacy Authentication (fallback if API key not provided)
+Legacy Authentication (fallback if API key not provided)
+
+```env
 RXRESUME_EMAIL=your@email.com
 RXRESUME_PASSWORD=yourpassword
 ```
@@ -254,7 +262,8 @@ src/
 ├── index.ts        # MCP server entry point with tool definitions
 ├── api-client.ts   # Reactive Resume REST API client
 ├── types.ts        # TypeScript type definitions
-└── test-api.ts     # API connectivity test script
+├── test-api.ts     # API connectivity test script
+└── test-create.ts  # Resume creation test script
 ```
 
 ## Security Notes
@@ -269,6 +278,10 @@ src/
 - [Reactive Resume Self-Hosting Guide](https://docs.rxresu.me/product-guides/self-hosting-reactive-resume-using-docker) - Instructions for self-hosting
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification and documentation
 
+## Acknowledgements
+
+Much Gratitude to [Amruth Pillai](https://github.com/AmruthPillai) for creating [Reactive Resume](https://github.com/AmruthPillai/Reactive-Resume) — a free, open-source, and secure resume builder empowering job seekers worldwide.
+
 ## License
 
-MIT
+MPL-2.0
