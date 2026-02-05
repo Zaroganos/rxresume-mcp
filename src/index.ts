@@ -457,17 +457,18 @@ server.tool(
   },
   async ({ resume_id, company, position, location, date, summary, url }) => {
     try {
-      const item: ExperienceItem = {
+      // v5 uses: hidden, period, website, description
+      const item = {
         id: generateId(),
-        visible: true,
+        hidden: false,
         company,
         position,
         location: location || "",
-        date: date || "",
-        summary: summary || "",
-        url: {
+        period: date || "",
+        description: summary || "",
+        website: {
           label: "",
-          href: url || "",
+          url: url || "",
         },
       };
       await apiClient.addSectionItem(resume_id, "experience", item);
@@ -508,18 +509,20 @@ server.tool(
   },
   async ({ resume_id, institution, study_type, area, score, date, summary, url }) => {
     try {
-      const item: EducationItem = {
+      // v5 uses: school, degree, grade, period, website, description, location
+      const item = {
         id: generateId(),
-        visible: true,
-        institution,
-        studyType: study_type,
+        hidden: false,
+        school: institution,
+        degree: study_type,
         area,
-        score: score || "",
-        date: date || "",
-        summary: summary || "",
-        url: {
+        grade: score || "",
+        location: "",
+        period: date || "",
+        description: summary || "",
+        website: {
           label: "",
-          href: url || "",
+          url: url || "",
         },
       };
       await apiClient.addSectionItem(resume_id, "education", item);
@@ -557,11 +560,13 @@ server.tool(
   },
   async ({ resume_id, name, description, level, keywords }) => {
     try {
-      const item: SkillItem = {
+      // v5 uses: hidden, icon, proficiency, level, keywords
+      const item = {
         id: generateId(),
-        visible: true,
+        hidden: false,
+        icon: "",
         name,
-        description: description || "",
+        proficiency: description || "",
         level: level ?? 3,
         keywords: keywords || [],
       };
@@ -602,17 +607,16 @@ server.tool(
   },
   async ({ resume_id, name, description, date, summary, keywords, url }) => {
     try {
-      const item: ProjectItem = {
+      // v5 uses: hidden, period, website, description (no keywords)
+      const item = {
         id: generateId(),
-        visible: true,
+        hidden: false,
         name,
-        description: description || "",
-        date: date || "",
-        summary: summary || "",
-        keywords: keywords || [],
-        url: {
+        period: date || "",
+        description: summary || description || "",
+        website: {
           label: "",
-          href: url || "",
+          url: url || "",
         },
       };
       await apiClient.addSectionItem(resume_id, "projects", item);

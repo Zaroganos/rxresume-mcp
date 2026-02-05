@@ -20,8 +20,8 @@
     "resume",
     "ai"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Iliya Yaroshevskiy",
+  "license": "MPL-2.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "dotenv": "^17.2.3",

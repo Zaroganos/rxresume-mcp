@@ -249,22 +249,12 @@ export class RxResumeApiClient {
       tags: [],
       withSampleData: false,
     };
-    const v5Resume = await this.request<ResumeV5>("/api/openapi/resume", {
+    const resumeId = await this.request<string>("/api/openapi/resume/create", {
       method: "POST",
       body: JSON.stringify(v5Dto),
     });
-    // Convert and return the created resume
-    return {
-      id: v5Resume.id,
-      title: v5Resume.name,
-      slug: v5Resume.slug,
-      data: v5Resume.data,
-      visibility: v5Resume.isPublic ? "public" : "private",
-      locked: v5Resume.isLocked,
-      userId: "",
-      createdAt: "",
-      updatedAt: "",
-    };
+    // Fetch the created resume to return full data
+    return this.getResume(resumeId);
   }
 
   async updateResume(id: string, dto: UpdateResumeDto): Promise<Resume> {
