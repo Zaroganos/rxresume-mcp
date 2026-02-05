@@ -1,6 +1,6 @@
 # Reactive Resume MCP Server
 
-An Model Context Protocol server that enables natural language manipulation of resumes in [Reactive Resume](https://rxresu.me/).
+A Model Context Protocol server that enables natural language manipulation of resumes in [Reactive Resume](https://rxresu.me/).
 
 **[NEW] Compatible with Reactive Resume v5** - Uses OpenAPI endpoints with API key authentication.
 
@@ -281,6 +281,10 @@ src/
 ## Acknowledgements
 
 Much Gratitude to [Amruth Pillai](https://github.com/AmruthPillai) for creating [Reactive Resume](https://github.com/AmruthPillai/Reactive-Resume) — a free, open-source, and secure resume builder empowering job seekers worldwide.
+
+## Disclaimer
+
+The content comprising this codebase is created in part by generative and agentic synthetic intelligence. While it is provided with absolutely no warranty, you are welcome to help identify and — if you wish — help solve, issues needing attention.
 
 ## License
 
