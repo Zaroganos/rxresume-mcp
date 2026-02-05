@@ -13,8 +13,14 @@ import type {
 } from "./types.js";
 
 const BASE_URL = process.env.RXRESUME_BASE_URL || "https://rxresu.me";
+const API_KEY = process.env.RXRESUME_API_KEY || "";
 
 let apiClient: RxResumeApiClient = createApiClient(BASE_URL);
+
+// Auto-configure API key from environment if available
+if (API_KEY) {
+  apiClient.setApiKey(API_KEY);
+}
 
 // Generate cuid2-compatible IDs (lowercase alphanumeric, ~24 chars)
 function generateId(): string {
@@ -36,21 +42,48 @@ const server = new McpServer({
 
 server.tool(
   "authenticate",
-  "Authenticate with Reactive Resume using username/email and password. Must be called before other operations.",
+  "Authenticate with Reactive Resume using an API key (recommended for v5) or email/password. API keys can be created in Settings > API Keys in the Reactive Resume dashboard.",
   {
-    identifier: z.string().describe("Username or email address"),
-    password: z.string().describe("User password"),
+    api_key: z.string().optional().describe("API key (recommended for v5 - create in Settings > API Keys)"),
+    identifier: z.string().optional().describe("Username or email address (legacy auth)"),
+    password: z.string().optional().describe("User password (legacy auth)"),
   },
-  async ({ identifier, password }) => {
+  async ({ api_key, identifier, password }) => {
     try {
-      const result = await apiClient.login(identifier, password);
+      // Prefer API key authentication (v5)
+      if (api_key) {
+        apiClient.setApiKey(api_key);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Successfully authenticated with API key`,
+            },
+          ],
+        };
+      }
+      
+      // Fall back to email/password login (legacy)
+      if (identifier && password) {
+        const result = await apiClient.login(identifier, password);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Successfully authenticated as ${result.user.name} (${result.user.email})`,
+            },
+          ],
+        };
+      }
+      
       return {
         content: [
           {
             type: "text" as const,
-            text: `Successfully authenticated as ${result.user.name} (${result.user.email})`,
+            text: `Please provide either an api_key or both identifier and password`,
           },
         ],
+        isError: true,
       };
     } catch (error) {
       return {

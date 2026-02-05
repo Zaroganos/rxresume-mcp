@@ -2,9 +2,11 @@
 
 An MCP (Model Context Protocol) server that enables natural language manipulation of resumes in [Reactive Resume](https://rxresu.me/).
 
+**Compatible with Reactive Resume v5** - Uses OpenAPI endpoints with API key authentication.
+
 ## Features
 
-- **Authentication** - Login with email/password
+- **Authentication** - API key (recommended) or email/password
 - **Resume Management** - Create, list, update, delete resumes
 - **Section Editing** - Modify any resume section (experience, education, skills, etc.)
 - **Item Management** - Add, update, or remove items from sections
@@ -50,7 +52,11 @@ Edit `.env` with your values:
 #   - Cloud: https://rxresu.me
 RXRESUME_BASE_URL=https://your-instance-url.com
 
-# Optional: Pre-configure credentials for automatic authentication
+# API Key Authentication (RECOMMENDED for v5)
+# Create an API key in Settings > API Keys in your Reactive Resume dashboard
+RXRESUME_API_KEY=your-api-key-here
+
+# Legacy Authentication (fallback if API key not provided)
 RXRESUME_EMAIL=your@email.com
 RXRESUME_PASSWORD=yourpassword
 ```
@@ -58,8 +64,11 @@ RXRESUME_PASSWORD=yourpassword
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `RXRESUME_BASE_URL` | Yes | The URL of your Reactive Resume instance |
-| `RXRESUME_EMAIL` | No | Email for automatic authentication |
-| `RXRESUME_PASSWORD` | No | Password for automatic authentication |
+| `RXRESUME_API_KEY` | No* | API key for v5 authentication (recommended) |
+| `RXRESUME_EMAIL` | No* | Email for legacy authentication |
+| `RXRESUME_PASSWORD` | No* | Password for legacy authentication |
+
+*At least one authentication method is required. API key takes priority if both are provided.
 
 ## Testing
 
@@ -69,7 +78,10 @@ Test API connectivity:
 # Without auth (health check only)
 npm run test:api
 
-# With auth (full test)
+# With API key (recommended)
+RXRESUME_API_KEY=your-api-key npm run test:api
+
+# With email/password (legacy)
 RXRESUME_EMAIL=your@email.com RXRESUME_PASSWORD=yourpassword npm run test:api
 ```
 
@@ -92,7 +104,8 @@ Add to your Claude Desktop configuration file:
       "command": "node",
       "args": ["/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com",
+        "RXRESUME_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -110,7 +123,8 @@ Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or `~/.
       "command": "node",
       "args": ["${userHome}/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com",
+        "RXRESUME_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -133,7 +147,8 @@ You can also access this file via Windsurf: *Settings → Cascade → MCP Server
       "command": "node",
       "args": ["/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com",
+        "RXRESUME_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -151,7 +166,8 @@ For other MCP-compatible clients, consult your client's documentation for the co
       "command": "node",
       "args": ["/path/to/rxresume-mcp/dist/index.js"],
       "env": {
-        "RXRESUME_BASE_URL": "https://your-instance-url.com"
+        "RXRESUME_BASE_URL": "https://your-instance-url.com",
+        "RXRESUME_API_KEY": "your-api-key-here"
       }
     }
   }
@@ -166,7 +182,7 @@ For other MCP-compatible clients, consult your client's documentation for the co
 |------|-------------|
 | `check_connection` | Verify the Reactive Resume instance is accessible |
 | `set_base_url` | Change the target Reactive Resume instance URL |
-| `authenticate` | Login with email and password |
+| `authenticate` | Authenticate with API key (recommended) or email/password |
 | `get_current_user` | Get info about the authenticated user |
 
 ### Resume Management

@@ -11,7 +11,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "test:api": "tsx src/test-api.ts"
+    "test:api": "tsx src/test-api.ts",
+    "test:api:prod": "cross-env ENV_FILE=.env.zimerguz tsx src/test-api.ts"
   },
   "keywords": [
     "mcp",
@@ -23,10 +24,12 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.2.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "cross-env": "^10.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }

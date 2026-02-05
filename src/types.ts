@@ -324,3 +324,42 @@ export type SectionName =
   | "interests"
   | "references"
   | "profiles";
+
+// v5 Types - Reactive Resume v5 uses different field names
+export interface ResumeListItemV5 {
+  id: string;
+  name: string; // v5 uses 'name' instead of 'title'
+  slug: string;
+  tags: string[];
+  isPublic: boolean; // v5 uses boolean instead of 'visibility' string
+  isLocked: boolean; // v5 uses 'isLocked' instead of 'locked'
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ResumeV5 {
+  id: string;
+  name: string;
+  slug: string;
+  tags: string[];
+  data: ResumeData;
+  isPublic: boolean;
+  isLocked: boolean;
+  hasPassword: boolean;
+}
+
+export interface CreateResumeDtoV5 {
+  name: string;
+  slug: string;
+  tags: string[];
+  withSampleData?: boolean;
+}
+
+export interface UpdateResumeDtoV5 {
+  id: string;
+  name?: string;
+  slug?: string;
+  tags?: string[];
+  data?: ResumeData;
+  isPublic?: boolean;
+}

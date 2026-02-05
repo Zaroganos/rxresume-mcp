@@ -1,4 +1,6 @@
 node_modules/
 dist/
 .env
+.env.zimerguz
 *.log
+claude.md

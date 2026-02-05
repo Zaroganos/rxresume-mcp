@@ -4,20 +4,38 @@ import type {
   LoginResponse,
   Resume,
   ResumeListItem,
+  ResumeListItemV5,
   CreateResumeDto,
+  CreateResumeDtoV5,
   UpdateResumeDto,
+  UpdateResumeDtoV5,
   SectionName,
   ResumeData,
+  ResumeV5,
 } from "./types.js";
+
+// This API client is designed for Reactive Resume v5 only.
+// v5 uses OpenAPI endpoints with API key authentication.
+// API keys can be created in Settings > API Keys in the Reactive Resume dashboard.
 
 export class RxResumeApiClient {
   private baseUrl: string;
+  private apiKey: string | null = null;
+  // Legacy token support for backwards compatibility
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private cookies: string[] = [];
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, "");
+  }
+
+  setApiKey(apiKey: string): void {
+    this.apiKey = apiKey;
+  }
+
+  getApiKey(): string | null {
+    return this.apiKey;
   }
 
   setTokens(tokens: AuthTokens): void {
@@ -36,7 +54,7 @@ export class RxResumeApiClient {
   }
 
   isAuthenticated(): boolean {
-    return this.accessToken !== null;
+    return this.apiKey !== null || this.accessToken !== null;
   }
 
   private async request<T>(
@@ -49,7 +67,12 @@ export class RxResumeApiClient {
       ...(options.headers as Record<string, string>),
     };
 
-    if (this.accessToken) {
+    // v5 API key authentication (preferred)
+    if (this.apiKey) {
+      headers["x-api-key"] = this.apiKey;
+    }
+    // Fallback to legacy token auth
+    else if (this.accessToken) {
       headers["Authorization"] = `Bearer ${this.accessToken}`;
     }
 
@@ -62,7 +85,7 @@ export class RxResumeApiClient {
       headers,
     });
 
-    if (response.status === 401 && this.refreshToken) {
+    if (response.status === 401 && this.refreshToken && !this.apiKey) {
       const refreshed = await this.refreshAccessToken();
       if (refreshed) {
         headers["Authorization"] = `Bearer ${this.accessToken}`;
@@ -95,12 +118,14 @@ export class RxResumeApiClient {
   }
 
   async login(email: string, password: string): Promise<LoginResponse> {
-    const response = await fetch(`${this.baseUrl}/api/auth/login`, {
+    // v5 uses Better Auth endpoint - requires Origin header
+    const response = await fetch(`${this.baseUrl}/api/auth/sign-in/email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Origin": this.baseUrl,
       },
-      body: JSON.stringify({ identifier: email, password }),
+      body: JSON.stringify({ email, password }),
       credentials: "include",
     });
 
@@ -116,11 +141,9 @@ export class RxResumeApiClient {
         const cookiePart = cookie.split(";")[0];
         this.cookies.push(cookiePart);
         
-        if (cookiePart.startsWith("Authentication=")) {
-          this.accessToken = cookiePart.replace("Authentication=", "");
-        }
-        if (cookiePart.startsWith("Refresh=")) {
-          this.refreshToken = cookiePart.replace("Refresh=", "");
+        // v5 Better Auth session token
+        if (cookiePart.startsWith("better-auth.session_token=")) {
+          this.accessToken = cookiePart.replace("better-auth.session_token=", "");
         }
       }
     }
@@ -169,46 +192,110 @@ export class RxResumeApiClient {
   }
 
   async logout(): Promise<void> {
-    await this.request("/api/auth/logout", { method: "POST" });
+    await this.request("/api/auth/sign-out", { method: "POST" });
     this.accessToken = null;
     this.refreshToken = null;
+    this.cookies = [];
   }
 
   async getCurrentUser(): Promise<User> {
-    return this.request<User>("/api/user/me");
+    // v5 uses Better Auth session endpoint
+    const session = await this.request<{ user: User }>("/api/auth/get-session");
+    return session.user;
   }
 
   async listResumes(): Promise<ResumeListItem[]> {
-    return this.request<ResumeListItem[]>("/api/resume");
+    // v5 uses OpenAPI endpoint with GET method
+    const v5Resumes = await this.request<ResumeListItemV5[]>(
+      "/api/openapi/resume/list?sort=lastUpdatedAt",
+      { method: "GET" }
+    );
+    // Convert v5 format to normalized format
+    return v5Resumes.map((r) => ({
+      id: r.id,
+      title: r.name, // v5 uses 'name' instead of 'title'
+      slug: r.slug,
+      visibility: r.isPublic ? "public" : "private", // v5 uses boolean isPublic
+      locked: r.isLocked, // v5 uses isLocked
+      createdAt: r.createdAt.toString(),
+      updatedAt: r.updatedAt.toString(),
+    }));
   }
 
   async getResume(id: string): Promise<Resume> {
-    return this.request<Resume>(`/api/resume/${id}`);
+    // v5 uses OpenAPI endpoint with GET method
+    const v5Resume = await this.request<ResumeV5>(`/api/openapi/resume/${id}`, {
+      method: "GET",
+    });
+    // Convert v5 format to normalized format
+    return {
+      id: v5Resume.id,
+      title: v5Resume.name,
+      slug: v5Resume.slug,
+      data: v5Resume.data,
+      visibility: v5Resume.isPublic ? "public" : "private",
+      locked: v5Resume.isLocked,
+      userId: "",
+      createdAt: "",
+      updatedAt: "",
+    };
   }
 
   async createResume(dto: CreateResumeDto): Promise<Resume> {
-    return this.request<Resume>("/api/resume", {
+    // v5 uses OpenAPI endpoint with POST method
+    const v5Dto: CreateResumeDtoV5 = {
+      name: dto.title,
+      slug: dto.slug,
+      tags: [],
+      withSampleData: false,
+    };
+    const v5Resume = await this.request<ResumeV5>("/api/openapi/resume", {
       method: "POST",
-      body: JSON.stringify(dto),
+      body: JSON.stringify(v5Dto),
     });
+    // Convert and return the created resume
+    return {
+      id: v5Resume.id,
+      title: v5Resume.name,
+      slug: v5Resume.slug,
+      data: v5Resume.data,
+      visibility: v5Resume.isPublic ? "public" : "private",
+      locked: v5Resume.isLocked,
+      userId: "",
+      createdAt: "",
+      updatedAt: "",
+    };
   }
 
   async updateResume(id: string, dto: UpdateResumeDto): Promise<Resume> {
-    return this.request<Resume>(`/api/resume/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(dto),
+    // v5 uses OpenAPI endpoint with PUT method
+    const v5Dto: Partial<UpdateResumeDtoV5> = {};
+    if (dto.title !== undefined) v5Dto.name = dto.title;
+    if (dto.slug !== undefined) v5Dto.slug = dto.slug;
+    if (dto.data !== undefined) v5Dto.data = dto.data as ResumeData;
+    if (dto.visibility !== undefined) v5Dto.isPublic = dto.visibility === "public";
+    
+    await this.request<unknown>(`/api/openapi/resume/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(v5Dto),
     });
+    // Fetch updated resume to return
+    return this.getResume(id);
   }
 
   async deleteResume(id: string): Promise<void> {
-    await this.request(`/api/resume/${id}`, { method: "DELETE" });
+    await this.request(`/api/openapi/resume/${id}`, {
+      method: "DELETE",
+    });
   }
 
   async lockResume(id: string, locked: boolean): Promise<Resume> {
-    return this.request<Resume>(`/api/resume/${id}/lock`, {
-      method: "PATCH",
-      body: JSON.stringify({ locked }),
+    // v5 uses OpenAPI endpoint for setting lock status
+    await this.request(`/api/openapi/resume/${id}/lock`, {
+      method: "PUT",
+      body: JSON.stringify({ isLocked: locked }),
     });
+    return this.getResume(id);
   }
 
   async updateResumeData(
@@ -319,7 +406,13 @@ export class RxResumeApiClient {
   }
 
   async healthCheck(): Promise<{ status: string }> {
-    return this.request<{ status: string }>("/api/health");
+    try {
+      return await this.request<{ status: string }>("/api/health");
+    } catch {
+      // Some instances may not have /api/health, check root
+      const response = await fetch(`${this.baseUrl}`);
+      return { status: response.ok ? "healthy" : "unhealthy" };
+    }
   }
 }
 

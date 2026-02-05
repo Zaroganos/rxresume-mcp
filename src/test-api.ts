@@ -1,65 +1,82 @@
+import { config } from "dotenv";
 import { createApiClient } from "./api-client.js";
 
+// Load environment file (default: .env, or specify with ENV_FILE)
+const envFile = process.env.ENV_FILE || ".env";
+config({ path: envFile });
+console.log(`Loading environment from: ${envFile}`);
+
 const BASE_URL = process.env.RXRESUME_BASE_URL || "https://rxresu.me";
+const API_KEY = process.env.RXRESUME_API_KEY;
+const EMAIL = process.env.RXRESUME_EMAIL;
+const PASSWORD = process.env.RXRESUME_PASSWORD;
 
 async function main() {
+  console.log(`Testing API connection to: ${BASE_URL}`);
+  
   const client = createApiClient(BASE_URL);
-
-  console.log("Testing Reactive Resume API connectivity...");
-  console.log(`Base URL: ${BASE_URL}\n`);
-
+  
+  // Test health check
   try {
-    console.log("1. Health check...");
     const health = await client.healthCheck();
-    console.log(`   ✓ Server status: ${health.status}\n`);
+    console.log("✅ Health check passed:", health);
   } catch (error) {
-    console.error(`   ✗ Health check failed: ${error instanceof Error ? error.message : error}`);
-    console.log("\nMake sure the Reactive Resume instance is accessible.");
+    console.error("❌ Health check failed:", error);
     process.exit(1);
   }
-
-  const email = process.env.RXRESUME_EMAIL;
-  const password = process.env.RXRESUME_PASSWORD;
-
-  if (!email || !password) {
-    console.log("2. Skipping authentication test (RXRESUME_EMAIL and RXRESUME_PASSWORD not set)");
-    console.log("\nTo test authentication, set these environment variables:");
-    console.log("  RXRESUME_EMAIL=your@email.com");
-    console.log("  RXRESUME_PASSWORD=yourpassword");
-    return;
-  }
-
-  try {
-    console.log("2. Authenticating...");
-    const loginResult = await client.login(email, password);
-    console.log(`   ✓ Logged in as: ${loginResult.user.name} (${loginResult.user.email})\n`);
-  } catch (error) {
-    console.error(`   ✗ Authentication failed: ${error instanceof Error ? error.message : error}`);
-    process.exit(1);
-  }
-
-  try {
-    console.log("3. Fetching current user...");
-    const user = await client.getCurrentUser();
-    console.log(`   ✓ User ID: ${user.id}`);
-    console.log(`   ✓ Username: ${user.username}\n`);
-  } catch (error) {
-    console.error(`   ✗ Failed to get user: ${error instanceof Error ? error.message : error}`);
-  }
-
-  try {
-    console.log("4. Listing resumes...");
-    const resumes = await client.listResumes();
-    console.log(`   ✓ Found ${resumes.length} resume(s)`);
-    for (const resume of resumes) {
-      console.log(`     - ${resume.title} (${resume.id})`);
+  
+  // Test authentication - prefer API key (v5 recommended)
+  if (API_KEY) {
+    try {
+      console.log(`\nUsing API key authentication (v5)`);
+      client.setApiKey(API_KEY);
+      console.log("✅ API key set");
+      
+      // Test listing resumes
+      const resumes = await client.listResumes();
+      console.log(`✅ Found ${resumes.length} resumes`);
+      
+      if (resumes.length > 0) {
+        const firstResume = resumes[0];
+        console.log(`  First resume: "${firstResume.title}" (${firstResume.id})`);
+        
+        // Test getting full resume
+        const fullResume = await client.getResume(firstResume.id);
+        console.log(`✅ Retrieved full resume with ${Object.keys(fullResume.data.sections).length} sections`);
+      }
+    } catch (error) {
+      console.error("❌ API key test failed:", error);
+      process.exit(1);
     }
-    console.log();
-  } catch (error) {
-    console.error(`   ✗ Failed to list resumes: ${error instanceof Error ? error.message : error}`);
+  } else if (EMAIL && PASSWORD) {
+    // Fall back to email/password (legacy)
+    try {
+      console.log(`\nAttempting login as: ${EMAIL}`);
+      const loginResult = await client.login(EMAIL, PASSWORD);
+      console.log("✅ Login successful:", loginResult.user.name);
+      
+      // Test listing resumes
+      const resumes = await client.listResumes();
+      console.log(`✅ Found ${resumes.length} resumes`);
+      
+      if (resumes.length > 0) {
+        const firstResume = resumes[0];
+        console.log(`  First resume: "${firstResume.title}" (${firstResume.id})`);
+        
+        // Test getting full resume
+        const fullResume = await client.getResume(firstResume.id);
+        console.log(`✅ Retrieved full resume with ${Object.keys(fullResume.data.sections).length} sections`);
+      }
+    } catch (error) {
+      console.error("❌ Authentication test failed:", error);
+      process.exit(1);
+    }
+  } else {
+    console.log("\n⚠️  No credentials provided. Skipping auth tests.");
+    console.log("   Set RXRESUME_API_KEY (recommended) or RXRESUME_EMAIL + RXRESUME_PASSWORD");
   }
-
-  console.log("All tests completed successfully!");
+  
+  console.log("\n✅ All tests passed!");
 }
 
 main().catch((error) => {
